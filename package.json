@@ -1,0 +1,29 @@
+{
+  "name": "ping-pong",
+  "version": "1.0.0",
+  "description": "An application that runs as a service and will update a Digital Ocean DNS name with the current public IP via the DO v2.0 API on an interval.",
+  "main": "index.js",
+  "dependencies": {
+    "bunyan": "^1.8.1",
+    "lodash": "^4.13.1",
+    "request": "^2.72.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "test",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trousyt/ping-pong.git"
+  },
+  "keywords": [
+    "ddns"
+  ],
+  "author": "Troy Parkinson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/trousyt/ping-pong/issues"
+  },
+  "homepage": "https://github.com/trousyt/ping-pong#readme"
+}
