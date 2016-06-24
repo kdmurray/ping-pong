@@ -1,43 +1,30 @@
 "use strict";
 
 const request = require("request");
+const log = require("./logging");
+const _ = require("lodash");
 
 let Util = function() {
-    this.throwError = function(msg) {
-        return `${msg}. See log file for details.`;
+
+    this.throwError = function() {
+        const fields = arguments.length === 2 ? arguments[0] : null;
+        const msg = arguments.length === 2 ? arguments[1] : arguments[0];
+
+        let err = fields instanceof Error 
+            ? fields : _.assign(new Error(msg), { context: fields });
+
+        log.error(err);
+        throw err;
     };
 
-    this.getHostName = function(fqdn) {
-        let match = fqdn.match(/^(([a-z]|[a-z][a-z0-9\-]*[a-z0-9])\.)*([a-z]|[a-z][a-z0-9\-]*[a-z0-9])$/i);
-        return match != null && match.length > 2 && typeof match[2] === "string" && match[2].length > 0
-            ? match[2] : null;
+    this.httpError = function(res, err, msg) {
+        this.throwError({ statusCode: res.statusCode, err: err }, msg);
     };
 
-    this.getDomain = function(fqdn) {
-        return "theparki5.com";
-        let hostName = this.getHostName(fqdn);
-        let domain = hostName;
-
-        if (hostName != null) {
-            let parts = hostName.split(".").reverse();
-            if (parts != null && parts.length > 1) {
-                domain = `${parts[1]}.${parts[0]}`;
-                if (hostName.toLowerCase().indexOf(".co.uk") != -1 && parts.length > 2) {
-                    domain = `${parts[2]}.${domain}`;
-                }
-            }
-        }
-
-        return domain;
+    this.errObj = function(msg) {
+        return { err: msg };
     };
-
-    this.apiRequest = function(apiToken) {
-        return request.defaults({
-            headers: {
-                "Authorization": "Bearer " + apiToken
-            }
-        });
-    };
+    
 };
 
 module.exports = new Util;
