@@ -1,5 +1,5 @@
 # ping-pong
-A simple DDNS client for Digital Ocean
+A simple DDNS client for the Digital Ocean DNS API
 
 # Introduction
 This project provides a simple DDNS client written in node to update DNS records via the Digital Ocean API
@@ -12,3 +12,6 @@ The application will run as a service on Windows. Not tested on Linux or otherwi
 Unfortunately, because of limitations of the Digital Ocean API, we can only perform updates on A records and not PTR records.
 Because of this, this client won't be sufficient if you are running certain services (such as email) behind the DNS hostname and you'll
 have to use a DDNS provider that provides this ability.
+
+# How do I run it?
+Simple: `npm start`
