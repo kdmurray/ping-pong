@@ -8,7 +8,7 @@ const _ = require("lodash");
 
 let config = {
     // The interval on which to update the DNS record
-    updateInterval: 15000,
+    updateInterval: 900000, // 15m
     
     // The endpoint that will be queried for the external IP
     getIpUrl: "https://myexternalip.com/raw",

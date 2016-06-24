@@ -2,86 +2,111 @@
 
 const log = require("./util/logging.js");
 const util = require("./util/util.js");
+const http = require("./util/http.js");
 const config = require("../config.js");
 const _ = require("lodash");
 
 const API_BASE = "https://api.digitalocean.com/v2/domains/";
-const request = util.apiRequest(config.digitalOcean.apiKey);
+const request = http.apiRequest(config.digitalOcean.apiKey);
 
-function fetchAllResourceRecords(domain, cb) {
+function getDomainResourceRecords(domain, cb) {
+
     const url = `${API_BASE}${domain}/records`;
-    log.debug("DNSupdate attempting to fetch resource records at %s", url);
+    log.debug({ domain: domain }, "starting to fetch all domain records at %s", url);
+
     request(url, (err, res, body) => {
         if (err || res.statusCode !== 200) {
-            log.error("DNSupdate record fetch returned status code %d with error %s", res.statusCode, err);
-            util.throwError("Failed to fetch domain resource records");
+            util.throwHttpError(res, err, "failed to fetch all domain records");
         }
 
         let data = JSON.parse(body);
         if (!data.domain_records) {
-            log.error("DNSupdate resource record response JSON schema unexpected; data: %j", data);
-            util.throwError("DNSupdate resource record response JSON schema unexpected");
+            util.throwError({ data: data }, "fetched resource records JSON has invalid schema");
         }
 
         var records = data.domain_records;
-        log.debug("DNSupdate request successful; returned %d resource records", records.length);
+        log.debug("got %d resource records successfully", records.length);
         cb(records);
     });
 }
 
-function updateResourceRecord(domain, recordId, ip) {
-    const url = `${API_BASE}${domain}/records/${recordId}`;
+function updateResourceRecord(domain, recordId, publicIp, cb) {
 
-    let options = {
+    const url = `${API_BASE}${domain}/records/${recordId}`;
+    log.debug({ recordId: recordId }, "starting to update domain resource record");
+
+    const options = {
         url: url, 
-        json: { data: ip }
+        json: { data: publicIp }
     };
-    
+
     request.put(options, (err, res, body) => {
         if (err || res.statusCode !== 200) {
-            log.error("DNSupdate resource update returned status code %d with error %s", res.statusCode, err);
-            util.throwError("Failed to update resource record");
+            util.throwHttpError(res, err, "update resource record call failed");
         }
+
+        log.info("updated resource record for record ID %d successfully with IP %s!", recordId, publicIp);
+        cb();
     });
 }
 
-function updateDns(publicIp) {
-    config.digitalOcean.hostnames.forEach((fqdn) => {
-        log.debug("DNSupdate starting for fqdn %s with public IP %s", fqdn, publicIp);
+function startUpdate(publicIp, domainParts, cb) {
 
-        let domain = "theparki5.com"; // util.getDomain(fqdn);
-        log.debug("DNSupdate parsed domain as %s", domain);
+    const domain = domainParts.domain;
+    const subdomain = domainParts.subdomain;
+    log.debug({ fqdn: domainParts, publicIp: publicIp }, "starting resource record update");
 
-        fetchAllResourceRecords(domain, (recs) => {
-            var hostname = "test.ddns"; // util.getHostName(fqdn);
-            log.debug("DNSupdate parsed hostname as %s", hostname);
-            
-            var matchingRecord = _.find(recs, (r) => {
-                return r.name === hostname;
-            });
-
-            if (!matchingRecord) {
-                log.error("DNSupdate could not find an existing matching resource record for hostname %s and domain %s", hostname, domain);
-                util.throwError("Could not find an existing matching resource record to update!");
-            }
-
-            updateResourceRecord(domain, matchingRecord.id, publicIp);
+    getDomainResourceRecords(domain, (recs) => {
+        
+        var matchingRecord = _.find(recs, (r) => {
+            return r.name === subdomain;
         });
+
+        if (!matchingRecord) {
+            util.throwError("could not find matching resource record for subdomain %s", domainParts.subdomain);
+        }
+
+        updateResourceRecord(domain, matchingRecord.id, publicIp, cb);
     });
 }
 
-module.exports = function() {
+function fetchPublicIp(cb) {
     const getIpUrl = config.getIpUrl;
-    log.debug("getIP request starting; URL = %s", getIpUrl);
+    log.debug("starting to fetch public IP using endpoint %s", getIpUrl);
 
     request(getIpUrl, (err, res, body) => {
         if (err || res.statusCode !== 200) {
-            log.error("getIP returned status code %d with error %s", res.statusCode, err);
-            util.throwError("Failed to get public IP");
+            util.throwHttpError(res, err, "failed to fetch public IP");
         }
 
         let publicIp = body.trim();
-        log.info("getIP request successful; public IP: %s", publicIp);
-        updateDns(publicIp);
+        log.info({ ip: publicIp }, "fetched public IP successfully");
+        cb(publicIp);
     });
+}
+
+exports.performDnsUpdate = function(cb) {
+
+    try {
+
+        fetchPublicIp((publicIp) => {
+
+            const fqdns = config.digitalOcean.hostnames;
+            fqdns.forEach((fqdn) => {
+            
+                const domainParts = http.getDomainParts(fqdn);
+                if (domainParts.err) {
+                    util.throwError({ input: fqdn }, "could not parse domain parts");
+                }
+
+                startUpdate(publicIp, domainParts, cb);
+            });
+
+        });
+
+    } catch (err) {
+        log.error(err, "the DNS update operation failed");
+        cb();
+    }
+
 };
