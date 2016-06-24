@@ -17,7 +17,7 @@ let Util = function() {
         throw err;
     };
 
-    this.httpError = function(res, err, msg) {
+    this.throwHttpError = function(res, err, msg) {
         this.throwError({ statusCode: res.statusCode, err: err }, msg);
     };
 
