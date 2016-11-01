@@ -1,0 +1,21 @@
+{
+    "development": {
+        "level": "debug"
+    },
+    "production": {
+        "level": "info"
+    },
+
+    "streams": [{
+        "type": "rotating-file",
+        "path": "logs/log.txt",
+        "period": "1d",
+        "count": 7
+    }],
+
+    "loggly": {
+        "token": "12345",
+        "subdomain": "your-subdomain"
+    }
+
+}

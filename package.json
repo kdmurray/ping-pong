@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "bunyan": "^1.8.1",
+    "bunyan-loggly": "^1.1.0",
     "lodash": "^4.13.1",
     "request": "^2.72.0",
     "winser": "^1.0.2"

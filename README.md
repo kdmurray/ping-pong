@@ -14,4 +14,4 @@ Because of this, this client won't be sufficient if you are running certain serv
 have to use a DDNS provider that provides this ability.
 
 # How do I run it?
-Simple: `npm start`
+It should install as a Windows service on NPM install. Use the SCM to start and stop it. Also, you must copy the same bunyan.sample.json and config-keys.sample.js files to their equivalents without the '.sample' and configure them with your API tokens. 
