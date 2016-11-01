@@ -6,12 +6,15 @@
   "dependencies": {
     "bunyan": "^1.8.1",
     "lodash": "^4.13.1",
-    "request": "^2.72.0"
+    "request": "^2.72.0",
+    "winser": "^1.0.2"
   },
   "devDependencies": {},
   "scripts": {
     "test": "test",
-    "start": "node index.js"
+    "start": "node index.js",
+    "postinstall": "winser -i -s -c",
+    "preuninstall": "winser -r -x -s"
   },
   "repository": {
     "type": "git",

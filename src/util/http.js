@@ -8,7 +8,8 @@ let Http = function() {
 
     this.getDomainParts = function(input) {
         // Note: this method does not work with domains with 
-        // prefixes made up of multiple parts (e.g. co.uk).
+        // prefixes made up of multiple parts (e.g. co.uk)
+        // nor with ones lacking a subdomain.
 
         let result = {};
         let split = input.split(".");
