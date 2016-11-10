@@ -66,6 +66,8 @@ function startUpdate(publicIp, domainParts, cb) {
             util.throwError("could not find matching resource record for subdomain %s", domainParts.subdomain);
         }
 
+        log.info({ subdomain: subdomain, recordId: matchingRecord.id }, "found matching resource record for subdomain")
+
         updateResourceRecord(domain, matchingRecord.id, publicIp, cb);
     });
 }
